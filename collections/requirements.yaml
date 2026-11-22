@@ -1,0 +1,6 @@
+---
+collections:
+  - name: community.docker
+  - name: vyos.vyos
+  - name: ansible.netcommon
+  - name: mrmeganova.uptime_kuma

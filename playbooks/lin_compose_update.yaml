@@ -1,0 +1,41 @@
+---
+- name: Pull latest Docker Compose images and recreate
+  hosts: compose
+  become: "{{ compose_become | default(true) }}"
+  gather_facts: false
+  pre_tasks:
+      - name: Kuma maintenance on
+        ansible.builtin.include_role:
+          name: kuma_maintenance
+
+  module_defaults:
+    community.docker.docker_compose_v2:
+      project_src: "{{ compose_project_dir }}"
+    community.docker.docker_compose_v2_pull:
+      project_src: "{{ compose_project_dir }}"
+
+  tasks:
+    - name: Require compose project directory
+      ansible.builtin.assert:
+        that:
+          - compose_project_dir is defined
+          - compose_project_dir | length > 0
+        fail_msg: >-
+          Set compose_project_dir in host_vars for {{ inventory_hostname }}
+
+    - name: Pull latest images
+      community.docker.docker_compose_v2_pull:
+        policy: always
+
+    - name: Recreate stack
+      community.docker.docker_compose_v2:
+        state: present
+        pull: never
+        recreate: auto
+
+    - name: Remove images no longer used by any container
+      community.docker.docker_prune:
+        images: true
+        images_filters:
+          until: 168h
+          dangling: false #false = all unused images, not just untagged ones

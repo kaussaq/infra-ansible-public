@@ -1,0 +1,5 @@
+---
+compose_project_dir: /opt/app
+
+kuma_monitors:
+  - "App"

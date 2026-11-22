@@ -1,0 +1,5 @@
+---
+compose_project_dir: /opt/web
+
+kuma_monitors:
+  - "Web"

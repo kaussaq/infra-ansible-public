@@ -1,0 +1,31 @@
+---
+- name: Check Kuma Python deps
+  ansible.builtin.command: /usr/bin/python3.12 -c "import socketio, websocket"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+  failed_when: false
+  register: kuma_deps
+
+- name: Install Kuma Python deps if missing
+  ansible.builtin.command: >
+    /usr/bin/python3.12 -m pip install --user
+    python-socketio websocket-client
+  delegate_to: localhost
+  become: false
+  changed_when: false
+  when: kuma_deps.rc != 0
+
+- name: Open maintenance window for this host
+  mrmeganova.uptime_kuma.maintenance:
+    api_url: "{{ kuma_url }}"
+    api_username: "{{ kuma_user }}"
+    api_password: "{{ kuma_pass }}"
+    title: "maintenance {{ inventory_hostname }}"
+    monitors: "{{ kuma_monitors }}"
+    all_status_pages: true
+    duration_minutes: "{{ kuma_maint_minutes | default(60) }}"
+  delegate_to: localhost
+  become: false
+  no_log: false
+  when: kuma_monitors | default([]) | length > 0

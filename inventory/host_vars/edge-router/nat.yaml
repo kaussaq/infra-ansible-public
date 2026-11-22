@@ -1,0 +1,27 @@
+---
+# Destination (port-forward) and source NAT rules.
+# Mirrors the VyOS config tree: keys = path nodes, scalars = leaf values,
+# lists = multi-value leaves, empty value (`key:`) = valueless node.
+# Edit here, run vyos_configuration.yaml (vyos_dry_run: true first). Removing a key removes it on the router.
+vyos_nat:
+  destination:
+    rule:
+      20:
+        description: HTTPS to reverse proxy
+        destination:
+          port: 443
+        inbound-interface:
+          name: pppoe0
+        protocol: tcp
+        translation:
+          address: 10.1.20.10
+          port: 443
+  source:
+    rule:
+      100:
+        outbound-interface:
+          name: pppoe0
+        source:
+          address: 10.1.0.0/16
+        translation:
+          address: masquerade

@@ -1,0 +1,44 @@
+---
+# DHCP, DNS, HTTPS API, NTP, SSH.
+# Mirrors the VyOS config tree: keys = path nodes, scalars = leaf values,
+# lists = multi-value leaves, empty value (`key:`) = valueless node.
+# Edit here, run vyos_configuration.yaml (vyos_dry_run: true first). Removing a key removes it on the router.
+vyos_service:
+  dhcp-server:
+    shared-network-name:
+      LAN:
+        subnet:
+          10.1.10.0/24:
+            option:
+              default-router: 10.1.10.1
+              name-server: 10.1.30.53
+            range:
+              0:
+                start: 10.1.10.100
+                stop: 10.1.10.200
+            subnet-id: 1
+      SERVERS:
+        subnet:
+          10.1.20.0/24:
+            option:
+              default-router: 10.1.20.1
+              name-server: 10.1.30.53
+            static-mapping:
+              web01:
+                ip-address: 10.1.20.10
+                mac: 02:00:00:00:00:10
+            subnet-id: 2
+  dns:
+  https:
+    api:
+      keys:
+        id:
+          automation:
+            key: "{{ vyos_cred_api_key }}"
+      rest:
+  ntp:
+    server:
+      0.pool.ntp.org:
+      1.pool.ntp.org:
+  ssh:
+    port: 22

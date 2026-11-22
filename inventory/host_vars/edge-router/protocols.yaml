@@ -1,0 +1,15 @@
+---
+# Static routing (add ospf/bgp here later).
+# Mirrors the VyOS config tree: keys = path nodes, scalars = leaf values,
+# lists = multi-value leaves, empty value (`key:`) = valueless node.
+# Edit here, run vyos_configuration.yaml (vyos_dry_run: true first). Removing a key removes it on the router.
+vyos_protocols:
+  static:
+    route:
+      0.0.0.0/0:
+        interface:
+          pppoe0:
+      10.1.40.0/24:
+        interface:
+          br0.40:
+            vrf: TENANT

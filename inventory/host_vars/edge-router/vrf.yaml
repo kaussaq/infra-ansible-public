@@ -1,0 +1,16 @@
+---
+# VRF definitions.
+# Mirrors the VyOS config tree: keys = path nodes, scalars = leaf values,
+# lists = multi-value leaves, empty value (`key:`) = valueless node.
+# Edit here, run vyos_configuration.yaml (vyos_dry_run: true first). Removing a key removes it on the router.
+vyos_vrf:
+  name:
+    TENANT:
+      protocols:
+        static:
+          route:
+            0.0.0.0/0:
+              interface:
+                pppoe0:
+                  vrf: default
+      table: 1001

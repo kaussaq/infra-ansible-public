@@ -1,0 +1,16 @@
+---
+- name: VyOS Get configuration
+  hosts: vyos
+  gather_facts: false
+
+  tasks:
+
+    - name: Retireve configuration
+      vyos.vyos.vyos_command:
+        commands:
+          - command: show configuration commands
+      register: vyos_backup
+
+    - name: Show configuration
+      ansible.builtin.debug:
+        msg: "{{ vyos_backup.stdout_lines[0] }}"

@@ -1,0 +1,37 @@
+---
+# Hostname, login users, DNS, syslog, time zone.
+# Mirrors the VyOS config tree: keys = path nodes, scalars = leaf values,
+# lists = multi-value leaves, empty value (`key:`) = valueless node.
+# Edit here, run vyos_configuration.yaml (vyos_dry_run: true first). Removing a key removes it on the router.
+#
+# The public key below is NOT a real key. Replace it before use.
+# Password hashes belong in Vault (vyos_cred_admin_password_hash), not in git.
+vyos_system:
+  config-management:
+    commit-revisions: 100
+  console:
+    device:
+      ttyS0:
+        speed: 115200
+  host-name: edge-router
+  login:
+    user:
+      awx:
+        authentication:
+          public-keys:
+            awx-automation:
+              key: AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyReplaceMeBeforeUse
+              type: ssh-ed25519
+        full-name: AWX Automation
+      admin:
+        authentication:
+          encrypted-password: "{{ vyos_cred_admin_password_hash }}"
+  name-server:
+    - 10.1.30.53
+    - 1.1.1.1
+  syslog:
+    local:
+      facility:
+        all:
+          level: info
+  time-zone: UTC

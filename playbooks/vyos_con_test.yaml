@@ -1,0 +1,26 @@
+---
+- name: Test AWX to VyOS connectivity
+  hosts: vyos
+  gather_facts: false
+
+  tasks:
+
+    - name: Retrieve VyOS version
+      vyos.vyos.vyos_command:
+        commands:
+          - show version
+      register: vyos_version
+
+    - name: Display VyOS version
+      ansible.builtin.debug:
+        var: vyos_version.stdout_lines[0]
+
+    - name: Retrieve system uptime
+      vyos.vyos.vyos_command:
+        commands:
+          - show system uptime
+      register: vyos_uptime
+
+    - name: Display system uptime
+      ansible.builtin.debug:
+        var: vyos_uptime.stdout_lines[0]

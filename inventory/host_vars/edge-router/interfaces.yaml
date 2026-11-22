@@ -1,0 +1,78 @@
+---
+# Physical, bonding, bridge/VIFs, PPPoE and WireGuard interfaces.
+# Mirrors the VyOS config tree: keys = path nodes, scalars = leaf values,
+# lists = multi-value leaves, empty value (`key:`) = valueless node.
+# Edit here, run vyos_configuration.yaml (vyos_dry_run: true first). Removing a key removes it on the router.
+# hw-id values are placeholders. Replace them with the router's real NIC addresses.
+vyos_interfaces:
+  bonding:
+    bond0:
+      description: LAG to switch
+      hash-policy: layer3+4
+      member:
+        interface:
+          - eth1
+          - eth2
+      mode: 802.3ad
+  bridge:
+    br0:
+      address: 10.1.1.1/24
+      description: BASE
+      enable-vlan:
+      member:
+        interface:
+          bond0:
+            allowed-vlan:
+              - 10
+              - 20
+              - 30
+              - 40
+      stp:
+      vif:
+        10:
+          address: 10.1.10.1/24
+          description: LAN
+        20:
+          address: 10.1.20.1/24
+          description: SERVERS
+        30:
+          address: 10.1.30.1/24
+          description: MGMT
+        40:
+          address: 10.1.40.1/24
+          description: TENANT
+          vrf: TENANT
+  ethernet:
+    eth0:
+      description: Uplink to ISP
+      hw-id: 02:00:00:00:00:01
+      offload:
+        gro:
+        gso:
+        sg:
+        tso:
+    eth1:
+      description: Bond0 member
+      hw-id: 02:00:00:00:00:02
+    eth2:
+      description: Bond0 member
+      hw-id: 02:00:00:00:00:03
+  loopback:
+    lo:
+  pppoe:
+    pppoe0:
+      authentication:
+        password: "{{ vyos_cred_pppoe_password }}"
+        username: "{{ vyos_cred_pppoe_username }}"
+      description: Internet (PPPoE)
+      source-interface: eth0
+  wireguard:
+    wg0:
+      address: 10.255.0.1/24
+      description: WireGuard
+      peer:
+        client1:
+          allowed-ips: 10.255.0.2/32
+          public-key: REPLACE_WITH_PEER_PUBLIC_KEY
+      port: 51820
+      private-key: "{{ vyos_cred_wg_private_key }}"

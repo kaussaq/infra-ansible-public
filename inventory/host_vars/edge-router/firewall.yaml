@@ -1,0 +1,80 @@
+---
+# Firewall groups and ipv4 forward/input rulesets.
+# Mirrors the VyOS config tree: keys = path nodes, scalars = leaf values,
+# lists = multi-value leaves, empty value (`key:`) = valueless node.
+# Edit here, run vyos_configuration.yaml (vyos_dry_run: true first). Removing a key removes it on the router.
+# Addresses below are examples.
+vyos_firewall:
+  group:
+    network-group:
+      RFC1918:
+        network:
+          - 10.0.0.0/8
+          - 172.16.0.0/12
+          - 192.168.0.0/16
+  ipv4:
+    forward:
+      filter:
+        default-action: drop
+        rule:
+          10:
+            action: accept
+            description: Allow established/related through router
+            state:
+              - established
+              - related
+          20:
+            action: accept
+            description: Allow LAN to WAN
+            inbound-interface:
+              name: br0.10
+            outbound-interface:
+              name: pppoe0
+          30:
+            action: accept
+            description: Allow WAN HTTPS to reverse proxy
+            destination:
+              address: 10.1.20.10
+              port: 443
+            inbound-interface:
+              name: pppoe0
+            protocol: tcp
+          40:
+            action: drop
+            description: Example tenant, no private destinations
+            destination:
+              group:
+                network-group: RFC1918
+            inbound-interface:
+              name: br0.40
+    input:
+      filter:
+        default-action: drop
+        rule:
+          10:
+            action: accept
+            description: Allow established/related to router
+            state:
+              - established
+              - related
+          20:
+            action: accept
+            description: Allow SSH from management VLAN
+            destination:
+              port: 22
+            inbound-interface:
+              name: br0.30
+            protocol: tcp
+          30:
+            action: accept
+            description: Allow WireGuard
+            destination:
+              port: 51820
+            inbound-interface:
+              name: pppoe0
+            protocol: udp
+          100:
+            action: drop
+            description: Drop new inbound WAN to router
+            inbound-interface:
+              name: pppoe0

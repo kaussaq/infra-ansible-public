@@ -1,0 +1,68 @@
+---
+- name: Reconcile VyOS configuration with vars (vars located inventory/host_vars/<device_name>/*.yaml)
+  hosts: vyos
+  gather_facts: false
+  vars:
+    vyos_managed: >-
+      {{ (vyos_sections.split(',') | map('trim') | list) if (vyos_sections is string) else vyos_sections }}
+  
+  tasks:
+    
+    - name: Require an explicit vyos_dry_run (true or false)
+      ansible.builtin.assert:
+        that:
+          - vyos_dry_run is defined
+          - (vyos_dry_run | string | lower) in ['true', 'false']
+        fail_msg: >-
+          vyos_dry_run must be set explicitly to true or false at launch (survey or extra vars).
+          Nothing was read from or changed on the router.
+        quiet: true
+
+    - name: Render desired config from vars
+      ansible.builtin.set_fact:
+        vyos_desired: "{{ vyos_tree | vyos_flatten }}"
+      no_log: "{{ vyos_no_log }}"
+
+    - name: Read running config
+      vyos.vyos.vyos_command:
+        commands:
+          - show configuration commands
+      register: vyos_running
+      check_mode: false
+      changed_when: false
+      no_log: "{{ vyos_no_log }}"
+
+    - name: Work out what needs to change
+      ansible.builtin.set_fact:
+        vyos_changes: "{{ vyos_desired | vyos_plan(vyos_running.stdout[0], vyos_managed, vyos_protected) }}"
+      no_log: "{{ vyos_no_log }}"
+
+    - name: Show plan (secrets masked)
+      ansible.builtin.debug:
+        msg:
+          managed_sections: "{{ vyos_managed }}"
+          delete: "{{ vyos_changes.delete | vyos_mask }}"
+          set: "{{ vyos_changes.set | vyos_mask }}"
+
+    - name: Dry run - stop after showing the plan
+      ansible.builtin.debug:
+        msg: "vyos_dry_run is true: nothing was applied. Set vyos_dry_run=false to apply this plan."
+      when: vyos_dry_run | bool
+
+    - ansible.builtin.meta: end_play
+      when: vyos_dry_run | bool
+
+    - name: Refuse suspiciously large deletions
+      ansible.builtin.assert:
+        that: vyos_allow_mass_delete | bool or (vyos_changes.delete | length) <= vyos_max_deletes
+        fail_msg: >-
+          Plan wants {{ vyos_changes.delete | length }} delete commands (limit {{ vyos_max_deletes }}).
+          Check the vars load correctly, or re-run with -e vyos_allow_mass_delete=true.
+
+    - name: Apply changes
+      vyos.vyos.vyos_config:
+        lines: "{{ vyos_changes.delete + vyos_changes.set }}"
+        save: true
+        comment: "ansible vyos reconcile"
+      when: (vyos_changes.delete | length) > 0 or (vyos_changes.set | length) > 0
+      no_log: "{{ vyos_no_log }}"

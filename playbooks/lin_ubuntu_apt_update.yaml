@@ -1,0 +1,41 @@
+---
+- name: Update and reboot Ubuntu hosts
+  hosts: ubuntu
+  become: true
+  # serial: 1          # one host at a time
+  pre_tasks:
+    - name: Kuma Maintenance one
+      ansible.builtin.include_role:
+        name: kuma_maintenance
+  gather_facts: true
+  vars:
+    force_reboot: false   # set false to reboot only when Ubuntu says it's required
+  tasks:
+    - name: Update apt cache and apply all upgrades
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: dist
+        autoremove: true
+        autoclean: true
+        lock_timeout: 120
+
+    - name: Check whether a reboot is required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+
+    - name: Reboot
+      ansible.builtin.reboot:
+        msg: "Rebooting after package updates (Ansible)"
+        reboot_timeout: 900
+        post_reboot_delay: 15
+      when: force_reboot | bool or reboot_required.stat.exists
+
+    - name: Confirm host is back and report uptime
+      ansible.builtin.command: uptime -p
+      changed_when: false
+      register: uptime_out
+
+    - name: Show uptime
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: {{ uptime_out.stdout }}"

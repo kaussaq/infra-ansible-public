@@ -1,0 +1,24 @@
+---
+# Top-level config sections this playbook owns for THIS device. Anything under these that is not
+# described in vars is deleted from the router. To manage a new section (e.g. policy,
+# high-availability): add a vars file, add it to tree.yaml, and list it here.
+vyos_sections:
+  - firewall
+  - interfaces
+  - nat
+  - protocols
+  - service
+  - system
+  - vrf
+
+# Lines matching any of these regexes are never deleted, even if missing from vars
+# (guards against locking AWX out).
+vyos_protected:
+  - '^set system login user awx '
+  - '^set service ssh'
+
+vyos_max_deletes: 40
+vyos_allow_mass_delete: false
+
+# Set false (or -e vyos_no_log=false) to debug; output will then contain secrets.
+vyos_no_log: true

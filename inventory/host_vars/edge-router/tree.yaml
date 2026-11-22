@@ -1,0 +1,10 @@
+---
+# Assembles the per-section vars into the full config tree.
+vyos_tree:
+  firewall: "{{ vyos_firewall }}"
+  interfaces: "{{ vyos_interfaces }}"
+  nat: "{{ vyos_nat }}"
+  protocols: "{{ vyos_protocols }}"
+  service: "{{ vyos_service }}"
+  system: "{{ vyos_system }}"
+  vrf: "{{ vyos_vrf }}"
